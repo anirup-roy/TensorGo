@@ -1,0 +1,47 @@
+// server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const passport = require('passport');
+const session = require('express-session');
+const dotenv = require('dotenv');
+dotenv.config();
+
+require('./config/passport');
+
+const app = express();
+
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
+app.use(session({ secret: 'secret', resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/' }),
+  (req, res) => {
+    res.redirect('/dashboard');
+  });
+
+app.get('/api/invoices', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).send('Unauthorized');
+  }
+  const invoices = await Invoice.find({ userId: req.user.id });
+  res.json(invoices);
+});
+
+app.post('/api/trigger-zapier', async (req, res) => {
+  const { invoiceId } = req.body;
+  const invoice = await Invoice.findById(invoiceId);
+  if (!invoice) {
+    return res.status(404).send('Invoice not found');
+  }
+  // Trigger Zapier webhook
+  const response = await axios.post(process.env.ZAPIER_WEBHOOK_URL, { invoice });
+  res.json(response.data);
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
