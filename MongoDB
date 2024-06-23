@@ -1,0 +1,24 @@
+// models/User.js
+const mongoose = require('mongoose');
+
+const UserSchema = new mongoose.Schema({
+  googleId: String,
+  displayName: String,
+  email: String,
+  photo: String
+});
+
+module.exports = mongoose.model('User', UserSchema);
+
+// models/Invoice.js
+const mongoose = require('mongoose');
+
+const InvoiceSchema = new mongoose.Schema({
+  userId: String,
+  amount: Number,
+  dueDate: Date,
+  recipientEmail: String,
+  status: { type: String, default: 'due' }
+});
+
+module.exports = mongoose.model('Invoice', InvoiceSchema);
