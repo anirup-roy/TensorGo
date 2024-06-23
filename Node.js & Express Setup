@@ -1,0 +1,2 @@
+npm init -y
+npm install express mongoose passport passport-google-oauth20 dotenv axios
