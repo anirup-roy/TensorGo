@@ -1,0 +1,36 @@
+// src/components/Dashboard.js
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+const Dashboard = () => {
+  const [invoices, setInvoices] = useState([]);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      const response = await axios.get('/api/invoices');
+      setInvoices(response.data);
+    };
+    fetchInvoices();
+  }, []);
+
+  return (
+    <div>
+      <h2>Due Invoices</h2>
+      <ul>
+        {invoices.map(invoice => (
+          <li key={invoice._id}>
+            {invoice.recipientEmail}: ${invoice.amount} due on {new Date(invoice.dueDate).toLocaleDateString()}
+            <button onClick={() => triggerAutomation(invoice._id)}>Send Reminder</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  const triggerAutomation = async (invoiceId) => {
+    await axios.post('/api/trigger-zapier', { invoiceId });
+    alert('Reminder sent!');
+  };
+};
+
+export default Dashboard;
